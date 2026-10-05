@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import "./Profile.css";
 
 function Profile() {
   const navigate = useNavigate();
@@ -91,6 +92,11 @@ function Profile() {
       return;
     }
 
+    if (!/^\d{6}$/.test(address.pincode.trim())) {
+      setError("Pincode must be exactly 6 digits.");
+      return;
+    }
+
     try {
       setUpdating(true);
 
@@ -125,189 +131,425 @@ function Profile() {
     }
   };
 
+  const getInitials = () => {
+    if (!user?.name) {
+      return "U";
+    }
+
+    return user.name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
   if (loading) {
     return (
-      <div style={{ padding: "40px" }}>
-        <h1>My Profile</h1>
-        <p>Loading...</p>
+      <div className="profile-loading">
+        <div className="profile-loader"></div>
+
+        <h2>Loading Profile</h2>
+
+        <p>Please wait...</p>
       </div>
     );
   }
 
   if (error && !user) {
     return (
-      <div style={{ padding: "40px" }}>
-        <h1>My Profile</h1>
-        <p style={{ color: "red" }}>{error}</p>
+      <div className="profile-error-page">
+        <div className="profile-error-icon">
+          ⚠️
+        </div>
+
+        <h2>Unable to load profile</h2>
+
+        <p>{error}</p>
+
+        <button
+          type="button"
+          onClick={() => navigate("/login")}
+        >
+          Go to Login
+        </button>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: "30px 40px",
-        backgroundColor: "#f1f3f6",
-        minHeight: "calc(100vh - 70px)"
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto"
-        }}
-      >
-        <h1>My Profile</h1>
+    <div className="profile-page">
 
-        {message && (
-          <div
-            style={{
-              backgroundColor: "#e8f5e9",
-              color: "#1b5e20",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-              fontWeight: "bold",
-              border: "1px solid #a5d6a7"
-            }}
-          >
-            ✓ {message}
+      {/* Profile Hero */}
+      <section className="profile-hero">
+
+        <div className="profile-hero-content">
+
+          <div className="profile-avatar-large">
+            {getInitials()}
           </div>
-        )}
 
-        {error && (
-          <div
-            style={{
-              backgroundColor: "#ffebee",
-              color: "#c62828",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-              fontWeight: "bold",
-              border: "1px solid #ef9a9a"
-            }}
-          >
-            ✕ {error}
+          <div>
+            <span className="profile-eyebrow">
+              SHOPKART ACCOUNT
+            </span>
+
+            <h1>
+              Welcome, {user?.name}
+            </h1>
+
+            <p>
+              Manage your account information and
+              delivery address.
+            </p>
           </div>
-        )}
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "8px",
-            marginBottom: "20px"
-          }}
-        >
-          <h2>Personal Information</h2>
-
-          <p>
-            <strong>Name:</strong> {user?.name}
-          </p>
-
-          <p>
-            <strong>Email:</strong> {user?.email}
-          </p>
-
-          <p>
-            <strong>Role:</strong> {user?.role}
-          </p>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "8px"
-          }}
-        >
-          <h2>My Address</h2>
-
-          <input
-            type="text"
-            name="street"
-            placeholder="Street / House Address"
-            value={address.street}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "12px",
-              marginBottom: "12px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <input
-            type="text"
-            name="city"
-            placeholder="City"
-            value={address.city}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "12px",
-              marginBottom: "12px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <input
-            type="text"
-            name="state"
-            placeholder="State"
-            value={address.state}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "12px",
-              marginBottom: "12px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <input
-            type="text"
-            name="pincode"
-            placeholder="Pincode"
-            value={address.pincode}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "12px",
-              marginBottom: "15px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={handleUpdateAddress}
-            disabled={updating}
-            style={{
-              padding: "12px 25px",
-              backgroundColor: updating
-                ? "#999"
-                : "#2874f0",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: updating
-                ? "not-allowed"
-                : "pointer",
-              fontSize: "16px",
-              fontWeight: "bold"
-            }}
-          >
-            {updating
-              ? "Updating..."
-              : "Update Address"}
-          </button>
+        <div className="profile-hero-icon">
+          👤
         </div>
+
+      </section>
+
+      {/* Messages */}
+      {message && (
+        <div className="profile-alert success">
+          <span>✓</span>
+          <div>
+            <strong>Success</strong>
+            <p>{message}</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="profile-alert error">
+          <span>!</span>
+          <div>
+            <strong>Something went wrong</strong>
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="profile-layout">
+
+        {/* Left Column */}
+        <div className="profile-main-column">
+
+          {/* Personal Information */}
+          <section className="profile-card">
+
+            <div className="card-header">
+
+              <div className="card-icon blue">
+                👤
+              </div>
+
+              <div>
+                <h2>Personal Information</h2>
+
+                <p>
+                  Your registered account details
+                </p>
+              </div>
+
+            </div>
+
+            <div className="personal-profile">
+
+              <div className="profile-mini-avatar">
+                {getInitials()}
+              </div>
+
+              <div className="personal-details">
+
+                <div className="detail-item">
+                  <span className="detail-label">
+                    Full Name
+                  </span>
+
+                  <strong>
+                    {user?.name}
+                  </strong>
+                </div>
+
+                <div className="detail-item">
+                  <span className="detail-label">
+                    Email Address
+                  </span>
+
+                  <strong>
+                    {user?.email}
+                  </strong>
+                </div>
+
+                <div className="detail-item">
+                  <span className="detail-label">
+                    Account Type
+                  </span>
+
+                  <span
+                    className={
+                      user?.role === "admin"
+                        ? "role-badge admin"
+                        : "role-badge user"
+                    }
+                  >
+                    {user?.role === "admin"
+                      ? "★ Administrator"
+                      : "● Customer"}
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* Address */}
+          <section className="profile-card">
+
+            <div className="card-header">
+
+              <div className="card-icon orange">
+                📍
+              </div>
+
+              <div>
+                <h2>Delivery Address</h2>
+
+                <p>
+                  This address will be used during
+                  checkout.
+                </p>
+              </div>
+
+            </div>
+
+            <div className="address-form">
+
+              <div className="form-field full">
+                <label>
+                  Street / House Address
+                </label>
+
+                <div className="input-wrapper">
+                  <span>🏠</span>
+
+                  <input
+                    type="text"
+                    name="street"
+                    placeholder="Enter your street or house address"
+                    value={address.street}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="address-fields-row">
+
+                <div className="form-field">
+                  <label>City</label>
+
+                  <div className="input-wrapper">
+                    <span>🏙️</span>
+
+                    <input
+                      type="text"
+                      name="city"
+                      placeholder="Enter city"
+                      value={address.city}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label>State</label>
+
+                  <div className="input-wrapper">
+                    <span>📌</span>
+
+                    <input
+                      type="text"
+                      name="state"
+                      placeholder="Enter state"
+                      value={address.state}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label>Pincode</label>
+
+                  <div className="input-wrapper">
+                    <span>🔢</span>
+
+                    <input
+                      type="text"
+                      name="pincode"
+                      placeholder="6-digit pincode"
+                      value={address.pincode}
+                      onChange={handleChange}
+                      maxLength="6"
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="address-save-row">
+
+                <div className="address-security">
+                  <span>🔒</span>
+
+                  <div>
+                    <strong>
+                      Your information is secure
+                    </strong>
+
+                    <small>
+                      Your address is only used for
+                      order delivery.
+                    </small>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="save-address-button"
+                  onClick={handleUpdateAddress}
+                  disabled={updating}
+                >
+                  {updating
+                    ? "Saving..."
+                    : "✓ Save Address"}
+                </button>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+        {/* Right Column */}
+        <aside className="profile-sidebar">
+
+          {/* Quick Actions */}
+          <section className="profile-card quick-actions-card">
+
+            <div className="sidebar-title">
+              <span>⚡</span>
+              <h2>Quick Actions</h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/orders")}
+            >
+              <span className="quick-icon blue-bg">
+                📦
+              </span>
+
+              <span className="quick-text">
+                <strong>My Orders</strong>
+                <small>
+                  Track your purchases
+                </small>
+              </span>
+
+              <span className="arrow">
+                →
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/cart")}
+            >
+              <span className="quick-icon green-bg">
+                🛒
+              </span>
+
+              <span className="quick-text">
+                <strong>My Cart</strong>
+                <small>
+                  View your shopping cart
+                </small>
+              </span>
+
+              <span className="arrow">
+                →
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/products")}
+            >
+              <span className="quick-icon orange-bg">
+                🛍️
+              </span>
+
+              <span className="quick-text">
+                <strong>Continue Shopping</strong>
+                <small>
+                  Explore more products
+                </small>
+              </span>
+
+              <span className="arrow">
+                →
+              </span>
+            </button>
+
+          </section>
+
+          {/* Security */}
+          <section className="security-card">
+
+            <div className="security-icon">
+              🛡️
+            </div>
+
+            <h3>
+              Safe & Secure Shopping
+            </h3>
+
+            <p>
+              Your account information and
+              shopping data are protected.
+            </p>
+
+            <div className="security-points">
+
+              <span>
+                ✓ Secure account
+              </span>
+
+              <span>
+                ✓ Protected information
+              </span>
+
+              <span>
+                ✓ Trusted shopping
+              </span>
+
+            </div>
+
+          </section>
+
+        </aside>
+
       </div>
+
     </div>
   );
 }

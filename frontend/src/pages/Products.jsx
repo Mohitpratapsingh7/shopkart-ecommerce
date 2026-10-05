@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+
 import {
   useNavigate,
   useSearchParams
@@ -17,18 +22,18 @@ function Products() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [search, setSearch] = useState(
+    searchParams.get("search") || ""
+  );
+
+  const [category, setCategory] = useState(
+    searchParams.get("category") || "All"
+  );
+
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [rating, setRating] = useState("0");
   const [sort, setSort] = useState("default");
-
-  const urlSearch =
-    searchParams.get("search") || "";
-
-  const urlCategory =
-    searchParams.get("category") || "";
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -36,13 +41,9 @@ function Products() {
         setLoading(true);
         setError("");
 
-        const response = await api.get(
-          "/products"
-        );
+        const response = await api.get("/products");
 
-        setProducts(
-          response.data.products || []
-        );
+        setProducts(response.data.products || []);
       } catch (error) {
         console.error(error);
 
@@ -59,29 +60,26 @@ function Products() {
   }, []);
 
   useEffect(() => {
-    setSearch(urlSearch);
+    const urlCategory =
+      searchParams.get("category") || "All";
 
-    setCategory(
-      urlCategory || "All"
-    );
-  }, [urlSearch, urlCategory]);
+    const urlSearch =
+      searchParams.get("search") || "";
+
+    setCategory(urlCategory);
+    setSearch(urlSearch);
+  }, [searchParams]);
 
   const categories = useMemo(() => {
     const uniqueCategories = [
       ...new Set(
         products
-          .map(
-            (product) =>
-              product.category
-          )
+          .map((product) => product.category)
           .filter(Boolean)
       )
     ];
 
-    return [
-      "All",
-      ...uniqueCategories
-    ];
+    return ["All", ...uniqueCategories];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -91,34 +89,28 @@ function Products() {
       search.trim().toLowerCase();
 
     if (searchText) {
-      result = result.filter(
-        (product) => {
-          const name =
-            product.name?.toLowerCase() ||
-            "";
+      result = result.filter((product) => {
+        const productName =
+          product.name?.toLowerCase() || "";
 
-          const brand =
-            product.brand?.toLowerCase() ||
-            "";
+        const brand =
+          product.brand?.toLowerCase() || "";
 
-          const description =
-            product.description?.toLowerCase() ||
-            "";
+        const description =
+          product.description?.toLowerCase() || "";
 
-          return (
-            name.includes(searchText) ||
-            brand.includes(searchText) ||
-            description.includes(searchText)
-          );
-        }
-      );
+        return (
+          productName.includes(searchText) ||
+          brand.includes(searchText) ||
+          description.includes(searchText)
+        );
+      });
     }
 
     if (category !== "All") {
       result = result.filter(
         (product) =>
-          product.category ===
-          category
+          product.category === category
       );
     }
 
@@ -141,25 +133,22 @@ function Products() {
     if (Number(rating) > 0) {
       result = result.filter(
         (product) =>
-          Number(
-            product.rating || 0
-          ) >= Number(rating)
+          Number(product.rating || 0) >=
+          Number(rating)
       );
     }
 
     if (sort === "price-low") {
       result.sort(
         (a, b) =>
-          Number(a.price) -
-          Number(b.price)
+          Number(a.price) - Number(b.price)
       );
     }
 
     if (sort === "price-high") {
       result.sort(
         (a, b) =>
-          Number(b.price) -
-          Number(a.price)
+          Number(b.price) - Number(a.price)
       );
     }
 
@@ -190,30 +179,6 @@ function Products() {
     sort
   ]);
 
-  const handleCategoryChange = (
-    newCategory
-  ) => {
-    setCategory(newCategory);
-
-    const params = new URLSearchParams();
-
-    if (search.trim()) {
-      params.set(
-        "search",
-        search.trim()
-      );
-    }
-
-    if (newCategory !== "All") {
-      params.set(
-        "category",
-        newCategory
-      );
-    }
-
-    setSearchParams(params);
-  };
-
   const clearFilters = () => {
     setSearch("");
     setCategory("All");
@@ -225,9 +190,39 @@ function Products() {
     setSearchParams({});
   };
 
-  const handleAddToCart = async (
-    productId
-  ) => {
+  const handleCategoryChange = (newCategory) => {
+    setCategory(newCategory);
+
+    const params = {};
+
+    if (newCategory !== "All") {
+      params.category = newCategory;
+    }
+
+    if (search.trim()) {
+      params.search = search.trim();
+    }
+
+    setSearchParams(params);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+
+    const params = {};
+
+    if (value.trim()) {
+      params.search = value.trim();
+    }
+
+    if (category !== "All") {
+      params.category = category;
+    }
+
+    setSearchParams(params);
+  };
+
+  const handleAddToCart = async (productId) => {
     const token =
       localStorage.getItem("token");
 
@@ -263,32 +258,12 @@ function Products() {
     }
   };
 
-  const getDiscountedPrice = (
-    product
-  ) => {
-    return Math.round(
-      product.price -
-        (product.price *
-          product.discount) /
-          100
-    );
-  };
-
   if (loading) {
     return (
-      <div className="products-loading">
-        <div className="products-loading-icon">
-          🛍️
-        </div>
-
-        <h2>
-          Loading Products...
-        </h2>
-
-        <p>
-          Finding the best products
-          for you.
-        </p>
+      <div className="products-loading-page">
+        <div className="products-loader"></div>
+        <h2>Loading Products</h2>
+        <p>Finding the best products for you...</p>
       </div>
     );
   }
@@ -296,23 +271,20 @@ function Products() {
   if (error) {
     return (
       <div className="products-error-page">
-        <div className="products-error-box">
-          <div>⚠️</div>
+        <div className="error-icon">⚠️</div>
 
-          <h2>
-            Something went wrong
-          </h2>
+        <h2>Something went wrong</h2>
 
-          <p>{error}</p>
+        <p>{error}</p>
 
-          <button
-            onClick={() =>
-              window.location.reload()
-            }
-          >
-            Try Again
-          </button>
-        </div>
+        <button
+          onClick={() =>
+            window.location.reload()
+          }
+          className="primary-button"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -320,14 +292,12 @@ function Products() {
   return (
     <div className="products-page">
 
-      {/* PAGE HEADER */}
-
-      <div className="products-page-header">
-
-        <div>
-          <span className="products-eyebrow">
+      {/* Hero */}
+      <section className="products-hero">
+        <div className="hero-content-products">
+          <div className="hero-eyebrow">
             SHOPKART STORE
-          </span>
+          </div>
 
           <h1>
             {category === "All"
@@ -336,42 +306,63 @@ function Products() {
           </h1>
 
           <p>
-            Discover great products at
-            amazing prices.
+            Discover great products, amazing
+            deals and trusted brands.
           </p>
+
+          <div className="hero-mini-stats">
+            <div>
+              <strong>
+                {products.length}+
+              </strong>
+              <span>Products</span>
+            </div>
+
+            <div>
+              <strong>
+                {categories.length - 1}
+              </strong>
+              <span>Categories</span>
+            </div>
+
+            <div>
+              <strong>24/7</strong>
+              <span>Shopping</span>
+            </div>
+          </div>
         </div>
 
-        <div className="products-header-icon">
+        <div className="hero-shopping-icon">
           🛍️
         </div>
-      </div>
+      </section>
 
-      {/* FILTER PANEL */}
+      {/* Filters */}
+      <section className="filters-card">
 
-      <div className="products-filter-card">
-
-        <div className="products-filter-title">
+        <div className="filters-heading">
           <div>
-            <h2>
-              🔎 Search & Filters
-            </h2>
+            <span className="section-kicker">
+              DISCOVER
+            </span>
+
+            <h2>Search & Filters</h2>
 
             <p>
-              Find exactly what you're
-              looking for.
+              Find exactly what you're looking
+              for.
             </p>
           </div>
 
           <button
-            className="products-clear-top"
+            className="reset-button"
             onClick={clearFilters}
           >
-            Reset Filters
+            ↻ Reset Filters
           </button>
         </div>
 
-        {/* SEARCH */}
-
+        {/* Search */}
         <div className="products-search-box">
           <span>🔍</span>
 
@@ -380,21 +371,17 @@ function Products() {
             placeholder="Search products, brands and more..."
             value={search}
             onChange={(event) =>
-              setSearch(
+              handleSearchChange(
                 event.target.value
               )
             }
           />
         </div>
 
-        {/* FILTERS */}
+        <div className="filters-grid">
 
-        <div className="products-filter-grid">
-
-          <div className="products-filter-field">
-            <label>
-              Category
-            </label>
+          <div className="filter-field">
+            <label>Category</label>
 
             <select
               value={category}
@@ -404,23 +391,19 @@ function Products() {
                 )
               }
             >
-              {categories.map(
-                (item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
-                    {item}
-                  </option>
-                )
-              )}
+              {categories.map((item) => (
+                <option
+                  key={item}
+                  value={item}
+                >
+                  {item}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div className="products-filter-field">
-            <label>
-              Minimum Price
-            </label>
+          <div className="filter-field">
+            <label>Minimum Price</label>
 
             <input
               type="number"
@@ -435,10 +418,8 @@ function Products() {
             />
           </div>
 
-          <div className="products-filter-field">
-            <label>
-              Maximum Price
-            </label>
+          <div className="filter-field">
+            <label>Maximum Price</label>
 
             <input
               type="number"
@@ -453,10 +434,8 @@ function Products() {
             />
           </div>
 
-          <div className="products-filter-field">
-            <label>
-              Rating
-            </label>
+          <div className="filter-field">
+            <label>Rating</label>
 
             <select
               value={rating}
@@ -471,23 +450,25 @@ function Products() {
               </option>
 
               <option value="4">
-                ⭐ 4★ & above
+                4★ & above
               </option>
 
               <option value="3">
-                ⭐ 3★ & above
+                3★ & above
               </option>
 
               <option value="2">
-                ⭐ 2★ & above
+                2★ & above
+              </option>
+
+              <option value="1">
+                1★ & above
               </option>
             </select>
           </div>
 
-          <div className="products-filter-field">
-            <label>
-              Sort By
-            </label>
+          <div className="filter-field">
+            <label>Sort By</label>
 
             <select
               value={sort}
@@ -521,212 +502,233 @@ function Products() {
 
         </div>
 
-        {/* RESULT BAR */}
+        <div className="results-bar">
+          <div>
+            <strong>
+              {filteredProducts.length}
+            </strong>
 
-        <div className="products-result-bar">
-
-          <strong>
-            {filteredProducts.length}{" "}
-            product
-            {filteredProducts.length !== 1
-              ? "s"
-              : ""}{" "}
-            found
-          </strong>
-
-          <span>
-            Showing the best matches
-            for you
-          </span>
-
-        </div>
-
-      </div>
-
-      {/* PRODUCTS */}
-
-      {filteredProducts.length === 0 ? (
-        <div className="products-empty">
-
-          <div className="products-empty-icon">
-            🔍
+            <span>
+              {" "}
+              product
+              {filteredProducts.length !== 1
+                ? "s"
+                : ""}{" "}
+              found
+            </span>
           </div>
 
-          <h2>
-            No Products Found
-          </h2>
+          <span className="results-message">
+            Showing the best matches for you
+          </span>
+        </div>
+      </section>
+
+      {/* Product Grid */}
+      {filteredProducts.length === 0 ? (
+        <div className="empty-products">
+          <div className="empty-icon">
+            🔎
+          </div>
+
+          <h2>No products found</h2>
 
           <p>
-            Try changing your search
-            or filters.
+            Try changing your search or
+            filters.
           </p>
 
           <button
             onClick={clearFilters}
+            className="primary-button"
           >
-            Clear All Filters
+            Clear Filters
           </button>
-
         </div>
       ) : (
-        <div className="products-grid">
+        <section className="product-section">
 
-          {filteredProducts.map(
-            (product) => {
-              const discountedPrice =
-                getDiscountedPrice(
-                  product
-                );
+          <div className="product-section-heading">
+            <div>
+              <span className="section-kicker">
+                SHOP NOW
+              </span>
 
-              return (
-                <div
-                  className="premium-product-card"
-                  key={product._id}
-                >
+              <h2>
+                {category === "All"
+                  ? "Featured Products"
+                  : `Best ${category} Picks`}
+              </h2>
+            </div>
 
-                  {/* IMAGE */}
+            <span className="product-count">
+              {filteredProducts.length} items
+            </span>
+          </div>
 
-                  <div
-                    className="premium-product-image"
-                    onClick={() =>
-                      navigate(
-                        `/product/${product._id}`
-                      )
-                    }
+          <div className="products-grid">
+
+            {filteredProducts.map(
+              (product) => {
+
+                const discountedPrice =
+                  Math.round(
+                    product.price -
+                      (product.price *
+                        product.discount) /
+                        100
+                  );
+
+                const isInStock =
+                  product.stock > 0;
+
+                return (
+                  <article
+                    key={product._id}
+                    className="product-card"
                   >
 
-                    {product.discount >
-                      0 && (
-                      <span className="premium-discount-badge">
-                        {product.discount}%
-                        OFF
-                      </span>
+                    {/* Discount */}
+                    {product.discount > 0 && (
+                      <div className="discount-badge">
+                        {product.discount}% OFF
+                      </div>
                     )}
 
-                    <img
-                      src={
-                        product.images?.[0] ||
-                        "https://placehold.co/500x500?text=Product"
+                    {/* Wishlist visual */}
+                    <button
+                      className="wishlist-button"
+                      type="button"
+                      onClick={(event) =>
+                        event.stopPropagation()
                       }
-                      alt={
-                        product.name
-                      }
-                      onError={(
-                        event
-                      ) => {
-                        event.currentTarget.src =
-                          "https://placehold.co/500x500?text=Product";
-                      }}
-                    />
+                    >
+                      ♡
+                    </button>
 
-                    <div className="premium-view-product">
-                      View Product →
-                    </div>
-
-                  </div>
-
-                  {/* INFO */}
-
-                  <div className="premium-product-info">
-
-                    <span className="premium-brand">
-                      {product.brand}
-                    </span>
-
-                    <h2
+                    {/* Image */}
+                    <div
+                      className="product-image-box"
                       onClick={() =>
                         navigate(
                           `/product/${product._id}`
                         )
                       }
-                      title={
-                        product.name
-                      }
                     >
-                      {product.name}
-                    </h2>
-
-                    <div className="premium-rating-row">
-
-                      <span className="premium-rating">
-                        ⭐{" "}
-                        {product.rating ||
-                          0}
-                      </span>
-
-                      <span
-                        className={
-                          product.stock >
-                          0
-                            ? "premium-stock"
-                            : "premium-out"
+                      <img
+                        src={
+                          product.images?.[0] ||
+                          "https://placehold.co/500x500?text=Product+Image"
                         }
-                      >
-                        {product.stock >
-                        0
-                          ? `${product.stock} left`
-                          : "Out of Stock"}
-                      </span>
+                        alt={product.name}
+                      />
 
+                      <div className="quick-view">
+                        View Details →
+                      </div>
                     </div>
 
-                    <div className="premium-price-row">
+                    {/* Details */}
+                    <div className="product-card-content">
 
-                      <strong>
-                        ₹
-                        {
-                          discountedPrice
-                        }
-                      </strong>
-
-                      {product.discount >
-                        0 && (
+                      <div className="product-meta">
                         <span>
-                          ₹
-                          {
-                            product.price
-                          }
+                          {product.category}
                         </span>
-                      )}
 
-                    </div>
+                        <span>
+                          {product.brand}
+                        </span>
+                      </div>
 
-                    {product.discount >
-                      0 && (
-                      <div className="premium-saving">
-                        💚 Save ₹
-                        {Math.round(
-                          product.price -
-                            discountedPrice
+                      <h3
+                        onClick={() =>
+                          navigate(
+                            `/product/${product._id}`
+                          )
+                        }
+                        title={product.name}
+                      >
+                        {product.name}
+                      </h3>
+
+                      <div className="rating-row">
+                        <span className="rating-badge">
+                          ⭐{" "}
+                          {product.rating || 0}
+                        </span>
+
+                        <span className="rating-text">
+                          Customer Rating
+                        </span>
+                      </div>
+
+                      <div className="price-row">
+                        <strong>
+                          ₹{discountedPrice}
+                        </strong>
+
+                        {product.discount > 0 && (
+                          <span className="old-price">
+                            ₹{product.price}
+                          </span>
                         )}
                       </div>
-                    )}
 
-                    <button
-                      className="premium-cart-button"
-                      disabled={
-                        product.stock <=
-                        0
-                      }
-                      onClick={() =>
-                        handleAddToCart(
-                          product._id
-                        )
-                      }
-                    >
-                      {product.stock >
-                      0
-                        ? "🛒 Add to Cart"
-                        : "Out of Stock"}
-                    </button>
+                      {product.discount > 0 && (
+                        <div className="saving-text">
+                          You save ₹
+                          {Number(product.price) -
+                            discountedPrice}
+                        </div>
+                      )}
 
-                  </div>
-                </div>
-              );
-            }
-          )}
+                      <div className="stock-row">
+                        <span
+                          className={
+                            isInStock
+                              ? "stock-dot available"
+                              : "stock-dot unavailable"
+                          }
+                        ></span>
 
-        </div>
+                        <span>
+                          {isInStock
+                            ? `${product.stock} in stock`
+                            : "Out of stock"}
+                        </span>
+                      </div>
+
+                      <button
+                        className={
+                          isInStock
+                            ? "cart-button"
+                            : "cart-button disabled"
+                        }
+                        disabled={!isInStock}
+                        onClick={(event) => {
+                          event.stopPropagation();
+
+                          if (isInStock) {
+                            handleAddToCart(
+                              product._id
+                            );
+                          }
+                        }}
+                      >
+                        {isInStock
+                          ? "🛒 Add to Cart"
+                          : "Out of Stock"}
+                      </button>
+
+                    </div>
+                  </article>
+                );
+              }
+            )}
+
+          </div>
+        </section>
       )}
 
     </div>

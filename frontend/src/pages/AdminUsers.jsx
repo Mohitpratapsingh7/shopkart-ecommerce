@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import "./AdminUsers.css";
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ function AdminUsers() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -105,180 +107,376 @@ function AdminUsers() {
     }
   };
 
+  const filteredUsers = useMemo(() => {
+    const search = searchText.trim().toLowerCase();
+
+    if (!search) {
+      return users;
+    }
+
+    return users.filter((user) =>
+      [
+        user.name,
+        user.email,
+        user.role,
+        user._id
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(search)
+    );
+  }, [users, searchText]);
+
+  const adminCount = users.filter(
+    (user) => user.role === "admin"
+  ).length;
+
+  const customerCount = users.filter(
+    (user) => user.role === "user"
+  ).length;
+
+  const getInitials = (name) => {
+    if (!name) return "U";
+
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  };
+
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          backgroundColor: "#f1f3f6",
-          minHeight: "calc(100vh - 70px)"
-        }}
-      >
-        <h1>Admin Users</h1>
-        <p>Loading users...</p>
+      <div className="admin-users-loading">
+        <div className="admin-users-spinner"></div>
+
+        <h2>Loading Customers...</h2>
+
+        <p>
+          Fetching your ShopKart user database.
+        </p>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: "30px 40px",
-        backgroundColor: "#f1f3f6",
-        minHeight: "calc(100vh - 70px)"
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto"
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px"
-          }}
-        >
-          <h1>Admin Users</h1>
+    <div className="admin-users-page">
+      <div className="admin-users-container">
+
+        {/* Header */}
+        <section className="admin-users-header">
+
+          <div className="admin-users-heading">
+            <div className="admin-users-icon">
+              👥
+            </div>
+
+            <div>
+              <span className="admin-users-eyebrow">
+                SHOPKART ADMINISTRATION
+              </span>
+
+              <h1>User Management</h1>
+
+              <p>
+                View customers and manage account roles
+                from one secure dashboard.
+              </p>
+            </div>
+          </div>
 
           <button
             type="button"
+            className="admin-users-dashboard-btn"
             onClick={() => navigate("/admin")}
-            style={{
-              padding: "10px 18px",
-              cursor: "pointer"
-            }}
           >
-            Dashboard
+            ← Dashboard
           </button>
-        </div>
 
+        </section>
+
+        {/* Alerts */}
         {message && (
-          <div
-            style={{
-              backgroundColor: "#e8f5e9",
-              color: "#1b5e20",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px"
-            }}
-          >
+          <div className="admin-users-alert success">
+            <span>✓</span>
             {message}
           </div>
         )}
 
         {error && (
-          <div
-            style={{
-              backgroundColor: "#ffebee",
-              color: "#c62828",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px"
-            }}
-          >
+          <div className="admin-users-alert error">
+            <span>!</span>
             {error}
           </div>
         )}
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "8px"
-          }}
-        >
-          <h2>All Users</h2>
+        {/* Statistics */}
+        <section className="admin-users-stats">
+
+          <div className="admin-user-stat-card">
+            <div className="admin-user-stat-icon blue">
+              👥
+            </div>
+
+            <div>
+              <span>Total Users</span>
+
+              <strong>
+                {users.length}
+              </strong>
+
+              <small>
+                Registered accounts
+              </small>
+            </div>
+          </div>
+
+          <div className="admin-user-stat-card">
+            <div className="admin-user-stat-icon green">
+              👤
+            </div>
+
+            <div>
+              <span>Customers</span>
+
+              <strong>
+                {customerCount}
+              </strong>
+
+              <small>
+                Standard user accounts
+              </small>
+            </div>
+          </div>
+
+          <div className="admin-user-stat-card">
+            <div className="admin-user-stat-icon purple">
+              🛡️
+            </div>
+
+            <div>
+              <span>Administrators</span>
+
+              <strong>
+                {adminCount}
+              </strong>
+
+              <small>
+                Admin accounts
+              </small>
+            </div>
+          </div>
+
+        </section>
+
+        {/* Main panel */}
+        <section className="admin-users-panel">
+
+          <div className="admin-users-panel-header">
+
+            <div>
+              <span className="section-eyebrow">
+                CUSTOMER DATABASE
+              </span>
+
+              <h2>All Users</h2>
+
+              <p>
+                Manage registered ShopKart accounts
+                and their access levels.
+              </p>
+            </div>
+
+            <div className="user-count-badge">
+              {filteredUsers.length} Users
+            </div>
+
+          </div>
+
+          {/* Search */}
+          <div className="admin-users-search">
+
+            <span className="search-icon">
+              🔍
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search by name, email, role or user ID..."
+              value={searchText}
+              onChange={(event) =>
+                setSearchText(event.target.value)
+              }
+            />
+
+            {searchText && (
+              <button
+                type="button"
+                onClick={() => setSearchText("")}
+              >
+                ×
+              </button>
+            )}
+
+          </div>
 
           {users.length === 0 ? (
-            <p>No users found.</p>
+            <div className="admin-users-empty">
+
+              <div className="empty-users-icon">
+                👥
+              </div>
+
+              <h3>No Users Found</h3>
+
+              <p>
+                Registered customers will appear here.
+              </p>
+
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="admin-users-empty">
+
+              <div className="empty-users-icon">
+                🔎
+              </div>
+
+              <h3>No Matching Users</h3>
+
+              <p>
+                Try searching with another name or
+                email address.
+              </p>
+
+            </div>
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "15px"
-              }}
-            >
-              {users.map((user) => (
-                <div
+            <div className="admin-users-list">
+
+              {filteredUsers.map((user) => (
+                <article
+                  className="admin-user-card"
                   key={user._id}
-                  style={{
-                    padding: "20px",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "20px"
-                  }}
                 >
-                  <div>
-                    <h3 style={{ marginTop: 0 }}>
-                      {user.name}
-                    </h3>
 
-                    <p>
-                      <strong>Email:</strong>{" "}
-                      {user.email}
-                    </p>
+                  {/* User identity */}
+                  <div className="admin-user-identity">
 
-                    <p>
-                      <strong>User ID:</strong>{" "}
-                      {user._id}
-                    </p>
+                    <div
+                      className={`admin-user-avatar ${
+                        user.role === "admin"
+                          ? "admin-avatar"
+                          : ""
+                      }`}
+                    >
+                      {getInitials(user.name)}
+                    </div>
 
-                    <p>
-                      <strong>Role:</strong>{" "}
-                      {user.role}
-                    </p>
+                    <div className="admin-user-main">
+
+                      <div className="admin-user-name-row">
+                        <h3>
+                          {user.name}
+                        </h3>
+
+                        <span
+                          className={`role-badge ${
+                            user.role === "admin"
+                              ? "admin-role"
+                              : "user-role"
+                          }`}
+                        >
+                          {user.role === "admin"
+                            ? "🛡️ Admin"
+                            : "👤 Customer"}
+                        </span>
+                      </div>
+
+                      <p className="admin-user-email">
+                        {user.email}
+                      </p>
+
+                      <p className="admin-user-id">
+                        ID: {user._id}
+                      </p>
+
+                    </div>
+
                   </div>
 
-                  <div>
+                  {/* Role management */}
+                  <div className="admin-user-actions">
+
                     <label>
-                      <strong>Change Role:</strong>
+                      ACCOUNT ROLE
                     </label>
 
-                    <br />
+                    <div className="role-select-wrapper">
 
-                    <select
-                      value={user.role}
-                      disabled={
-                        updatingId === user._id
-                      }
-                      onChange={(event) =>
-                        handleRoleChange(
-                          user._id,
-                          event.target.value
-                        )
-                      }
-                      style={{
-                        marginTop: "8px",
-                        padding: "10px",
-                        minWidth: "130px"
-                      }}
-                    >
-                      <option value="user">
-                        User
-                      </option>
+                      <select
+                        value={user.role}
+                        disabled={
+                          updatingId === user._id
+                        }
+                        onChange={(event) =>
+                          handleRoleChange(
+                            user._id,
+                            event.target.value
+                          )
+                        }
+                      >
+                        <option value="user">
+                          Customer
+                        </option>
 
-                      <option value="admin">
-                        Admin
-                      </option>
-                    </select>
+                        <option value="admin">
+                          Administrator
+                        </option>
+                      </select>
+
+                      <span>
+                        ▾
+                      </span>
+
+                    </div>
 
                     {updatingId === user._id && (
-                      <p>Updating...</p>
+                      <small className="role-updating">
+                        Updating role...
+                      </small>
                     )}
+
                   </div>
-                </div>
+
+                </article>
               ))}
+
             </div>
           )}
+
+        </section>
+
+        {/* Security note */}
+        <div className="admin-users-security">
+
+          <div className="security-icon">
+            🔐
+          </div>
+
+          <div>
+            <strong>
+              Role-based access control
+            </strong>
+
+            <p>
+              Only administrators can change account
+              roles. Customer accounts cannot access
+              the administration panel.
+            </p>
+          </div>
+
         </div>
+
       </div>
     </div>
   );

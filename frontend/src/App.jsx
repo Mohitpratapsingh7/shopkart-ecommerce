@@ -8,6 +8,7 @@ import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import Checkout from "./pages/Checkout";
@@ -26,24 +27,53 @@ function App() {
       <Navbar />
 
       <Routes>
-        {/* Customer Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
+
+        <Route
+          path="/products"
+          element={<Products />}
+        />
+
         <Route
           path="/product/:id"
           element={<ProductDetails />}
         />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/orders" element={<Orders />} />
+
+        <Route
+          path="/cart"
+          element={<Cart />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        <Route
+          path="/orders"
+          element={<Orders />}
+        />
+
         <Route
           path="/orders/:id"
           element={<OrderDetails />}
         />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/profile" element={<Profile />} />
 
-        {/* Protected Admin Routes */}
+        <Route
+          path="/checkout"
+          element={<Checkout />}
+        />
+
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
+
         <Route
           path="/admin"
           element={

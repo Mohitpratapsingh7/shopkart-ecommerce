@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import "./AdminProducts.css";
 
 const emptyProduct = {
   name: "",
@@ -299,377 +300,470 @@ function AdminProducts() {
     }
   };
 
+  const totalProducts = products.length;
+
+  const totalStock = products.reduce(
+    (total, product) => total + Number(product.stock || 0),
+    0
+  );
+
+  const lowStockProducts = products.filter(
+    (product) =>
+      Number(product.stock || 0) > 0 &&
+      Number(product.stock || 0) <= 10
+  ).length;
+
+  const outOfStockProducts = products.filter(
+    (product) => Number(product.stock || 0) === 0
+  ).length;
+
   if (loading) {
     return (
-      <div style={{ padding: "40px" }}>
-        <h1>Admin Products</h1>
-        <p>Loading products...</p>
+      <div className="admin-products-loading">
+        <div className="admin-products-spinner"></div>
+
+        <h2>Loading Products...</h2>
+
+        <p>Please wait while we fetch your store inventory.</p>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: "30px 40px",
-        backgroundColor: "#f1f3f6",
-        minHeight: "calc(100vh - 70px)"
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto"
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px"
-          }}
-        >
-          <h1>Admin Products</h1>
+    <div className="admin-products-page">
+      <div className="admin-products-container">
+
+        {/* Header */}
+        <section className="admin-products-header">
+          <div>
+            <div className="admin-products-title-row">
+              <div className="admin-products-title-icon">
+                📦
+              </div>
+
+              <div>
+                <span className="admin-products-eyebrow">
+                  STORE INVENTORY
+                </span>
+
+                <h1>Manage Products</h1>
+              </div>
+            </div>
+
+            <p>
+              Add, update and manage everything available in
+              your ShopKart store.
+            </p>
+          </div>
 
           <button
-            type="button"
+            className="admin-products-dashboard-button"
             onClick={() => navigate("/admin")}
-            style={{
-              padding: "10px 18px",
-              cursor: "pointer"
-            }}
           >
-            Dashboard
+            ← Dashboard
           </button>
-        </div>
+        </section>
 
+        {/* Alerts */}
         {message && (
-          <div
-            style={{
-              backgroundColor: "#e8f5e9",
-              color: "#1b5e20",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-              border: "1px solid #a5d6a7"
-            }}
-          >
-            ✓ {message}
+          <div className="admin-products-alert success">
+            <span>✓</span>
+            {message}
           </div>
         )}
 
         {error && (
-          <div
-            style={{
-              backgroundColor: "#ffebee",
-              color: "#c62828",
-              padding: "12px 15px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-              border: "1px solid #ef9a9a"
-            }}
-          >
-            ✕ {error}
+          <div className="admin-products-alert error">
+            <span>!</span>
+            {error}
           </div>
         )}
 
-        {/* Product Form */}
+        {/* Inventory Stats */}
+        <section className="inventory-stats">
+          <div className="inventory-stat-card">
+            <div className="inventory-stat-icon blue">
+              📦
+            </div>
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "8px",
-            marginBottom: "25px"
-          }}
-        >
-          <h2>
-            {editingId
-              ? "Edit Product"
-              : "Add New Product"}
-          </h2>
+            <div>
+              <span>Total Products</span>
+              <strong>{totalProducts}</strong>
+            </div>
+          </div>
+
+          <div className="inventory-stat-card">
+            <div className="inventory-stat-icon purple">
+              🏷️
+            </div>
+
+            <div>
+              <span>Total Stock</span>
+              <strong>{totalStock}</strong>
+            </div>
+          </div>
+
+          <div className="inventory-stat-card">
+            <div className="inventory-stat-icon orange">
+              ⚠️
+            </div>
+
+            <div>
+              <span>Low Stock</span>
+              <strong>{lowStockProducts}</strong>
+            </div>
+          </div>
+
+          <div className="inventory-stat-card">
+            <div className="inventory-stat-icon red">
+              🚫
+            </div>
+
+            <div>
+              <span>Out of Stock</span>
+              <strong>{outOfStockProducts}</strong>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Form */}
+        <section className="product-form-section">
+
+          <div className="form-section-header">
+            <div>
+              <span className="section-eyebrow">
+                PRODUCT MANAGEMENT
+              </span>
+
+              <h2>
+                {editingId
+                  ? "Edit Product"
+                  : "Add New Product"}
+              </h2>
+
+              <p>
+                {editingId
+                  ? "Update the selected product information."
+                  : "Create a new product for your ShopKart catalog."}
+              </p>
+            </div>
+
+            {editingId && (
+              <span className="editing-badge">
+                Editing Product
+              </span>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="name"
-              placeholder="Product Name"
-              value={formData.name}
-              onChange={handleChange}
-              style={inputStyle}
-            />
 
-            <textarea
-              name="description"
-              placeholder="Product Description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              style={inputStyle}
-            />
+            <div className="product-form-grid">
 
-            <input
-              type="number"
-              name="price"
-              placeholder="Price"
-              value={formData.price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              style={inputStyle}
-            />
+              <div className="form-field full">
+                <label>Product Name *</label>
 
-            <input
-              type="number"
-              name="discount"
-              placeholder="Discount (%)"
-              value={formData.discount}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              step="1"
-              style={inputStyle}
-            />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. Samsung Galaxy S25"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+              </div>
 
-            <input
-              type="text"
-              name="category"
-              placeholder="Category"
-              value={formData.category}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+              <div className="form-field full">
+                <label>Description *</label>
 
-            <input
-              type="text"
-              name="brand"
-              placeholder="Brand"
-              value={formData.brand}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+                <textarea
+                  name="description"
+                  placeholder="Enter a detailed product description..."
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="4"
+                />
+              </div>
 
-            <input
-              type="text"
-              name="images"
-              placeholder="Image URLs separated by commas"
-              value={formData.images}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+              <div className="form-field">
+                <label>Price (₹) *</label>
 
-            <input
-              type="number"
-              name="rating"
-              placeholder="Rating"
-              value={formData.rating}
-              onChange={handleChange}
-              min="0"
-              max="5"
-              step="0.1"
-              style={inputStyle}
-            />
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="Enter price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
 
-            <input
-              type="number"
-              name="stock"
-              placeholder="Stock"
-              value={formData.stock}
-              onChange={handleChange}
-              min="0"
-              step="1"
-              style={inputStyle}
-            />
+              <div className="form-field">
+                <label>Discount (%)</label>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px"
-              }}
-            >
+                <input
+                  type="number"
+                  name="discount"
+                  placeholder="0"
+                  value={formData.discount}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                  step="1"
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Category *</label>
+
+                <input
+                  type="text"
+                  name="category"
+                  placeholder="e.g. Mobiles"
+                  value={formData.category}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Brand *</label>
+
+                <input
+                  type="text"
+                  name="brand"
+                  placeholder="e.g. Samsung"
+                  value={formData.brand}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Rating</label>
+
+                <input
+                  type="number"
+                  name="rating"
+                  placeholder="0 - 5"
+                  value={formData.rating}
+                  onChange={handleChange}
+                  min="0"
+                  max="5"
+                  step="0.1"
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Stock *</label>
+
+                <input
+                  type="number"
+                  name="stock"
+                  placeholder="Available quantity"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  min="0"
+                  step="1"
+                />
+              </div>
+
+              <div className="form-field full">
+                <label>Product Images</label>
+
+                <input
+                  type="text"
+                  name="images"
+                  placeholder="Paste image URLs separated by commas"
+                  value={formData.images}
+                  onChange={handleChange}
+                />
+
+                <small>
+                  Add multiple image URLs separated by commas.
+                </small>
+              </div>
+
+            </div>
+
+            <div className="product-form-actions">
               <button
                 type="submit"
+                className="save-product-button"
                 disabled={saving}
-                style={{
-                  padding: "12px 20px",
-                  cursor: saving
-                    ? "not-allowed"
-                    : "pointer"
-                }}
               >
                 {saving
-                  ? "Saving..."
+                  ? "Saving Product..."
                   : editingId
-                  ? "Update Product"
-                  : "Add Product"}
+                  ? "✓ Update Product"
+                  : "+ Add Product"}
               </button>
 
               {editingId && (
                 <button
                   type="button"
+                  className="cancel-product-button"
                   onClick={resetForm}
-                  style={{
-                    padding: "12px 20px",
-                    cursor: "pointer"
-                  }}
                 >
                   Cancel Edit
                 </button>
               )}
             </div>
+
           </form>
-        </div>
+        </section>
 
         {/* Product List */}
+        <section className="products-list-section">
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "8px"
-          }}
-        >
-          <h2>All Products</h2>
+          <div className="products-list-header">
+            <div>
+              <span className="section-eyebrow">
+                CATALOG
+              </span>
+
+              <h2>All Products</h2>
+
+              <p>
+                {products.length} products currently available
+                in your store.
+              </p>
+            </div>
+          </div>
 
           {products.length === 0 ? (
-            <p>No products found.</p>
+            <div className="products-empty">
+              <div>📦</div>
+
+              <h3>No products found</h3>
+
+              <p>
+                Add your first product using the form above.
+              </p>
+            </div>
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "15px"
-              }}
-            >
-              {products.map((product) => (
-                <div
-                  key={product._id}
-                  style={{
-                    display: "flex",
-                    gap: "20px",
-                    padding: "20px",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                    alignItems: "center"
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "120px",
-                      height: "120px",
-                      flexShrink: 0,
-                      backgroundColor: "#f7f7f7",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                      borderRadius: "5px"
-                    }}
+            <div className="admin-product-grid">
+
+              {products.map((product) => {
+                const stock = Number(product.stock || 0);
+
+                const stockClass =
+                  stock === 0
+                    ? "out"
+                    : stock <= 10
+                    ? "low"
+                    : "available";
+
+                const finalPrice = Math.round(
+                  Number(product.price || 0) -
+                    (Number(product.price || 0) *
+                      Number(product.discount || 0)) /
+                      100
+                );
+
+                return (
+                  <article
+                    className="admin-product-card"
+                    key={product._id}
                   >
-                    <img
-                      src={
-                        product.images?.[0] ||
-                        "https://placehold.co/120x120?text=No+Image"
-                      }
-                      alt={product.name}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain"
-                      }}
-                    />
-                  </div>
+                    <div className="admin-product-image">
+                      <img
+                        src={
+                          product.images?.[0] ||
+                          "https://placehold.co/300x300?text=No+Image"
+                        }
+                        alt={product.name}
+                      />
 
-                  <div style={{ flex: 1 }}>
-                    <h3>{product.name}</h3>
+                      {Number(product.discount || 0) > 0 && (
+                        <span className="product-discount">
+                          {product.discount}% OFF
+                        </span>
+                      )}
+                    </div>
 
-                    <p>
-                      <strong>Brand:</strong>{" "}
-                      {product.brand}
-                    </p>
+                    <div className="admin-product-content">
 
-                    <p>
-                      <strong>Category:</strong>{" "}
-                      {product.category}
-                    </p>
+                      <div className="product-card-heading">
+                        <span className="product-category">
+                          {product.category}
+                        </span>
 
-                    <p>
-                      <strong>Price:</strong> ₹
-                      {product.price}
-                    </p>
+                        <span className="product-rating">
+                          ★ {product.rating}
+                        </span>
+                      </div>
 
-                    <p>
-                      <strong>Discount:</strong>{" "}
-                      {product.discount}%
-                    </p>
+                      <h3>{product.name}</h3>
 
-                    <p>
-                      <strong>Stock:</strong>{" "}
-                      {product.stock}
-                    </p>
+                      <p className="product-brand">
+                        {product.brand}
+                      </p>
 
-                    <p>
-                      <strong>Rating:</strong>{" "}
-                      {product.rating}
-                    </p>
-                  </div>
+                      <div className="product-price-row">
+                        <strong>
+                          ₹{finalPrice.toLocaleString("en-IN")}
+                        </strong>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px"
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(product)}
-                      style={{
-                        padding: "10px 15px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Edit
-                    </button>
+                        {Number(product.discount || 0) > 0 && (
+                          <del>
+                            ₹
+                            {Number(
+                              product.price
+                            ).toLocaleString("en-IN")}
+                          </del>
+                        )}
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDelete(product._id)
-                      }
-                      disabled={
-                        deletingId === product._id
-                      }
-                      style={{
-                        padding: "10px 15px",
-                        cursor:
-                          deletingId === product._id
-                            ? "not-allowed"
-                            : "pointer"
-                      }}
-                    >
-                      {deletingId === product._id
-                        ? "Deleting..."
-                        : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      <div
+                        className={`product-stock ${stockClass}`}
+                      >
+                        <span></span>
+
+                        {stock === 0
+                          ? "Out of Stock"
+                          : stock <= 10
+                          ? `Low Stock · ${stock} left`
+                          : `${stock} units in stock`}
+                      </div>
+
+                      <div className="product-card-actions">
+
+                        <button
+                          type="button"
+                          className="edit-product-button"
+                          onClick={() =>
+                            handleEdit(product)
+                          }
+                        >
+                          ✏️ Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="delete-product-button"
+                          onClick={() =>
+                            handleDelete(product._id)
+                          }
+                          disabled={
+                            deletingId === product._id
+                          }
+                        >
+                          {deletingId === product._id
+                            ? "Deleting..."
+                            : "🗑️ Delete"}
+                        </button>
+
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+
             </div>
           )}
-        </div>
+        </section>
+
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  display: "block",
-  width: "100%",
-  padding: "12px",
-  marginBottom: "12px",
-  boxSizing: "border-box"
-};
 
 export default AdminProducts;
